@@ -1,0 +1,20 @@
+#!/usr/bin/php
+<?
+if(chdir(dirname(realpath( __FILE__ )))){
+    include('../etc/config.php');
+}else{
+    echo("Unable to load config.\n");
+};
+
+if(include('../lib/libmoulin.php')){
+}else{
+    die("Unable to load Moulin library.\n");
+};
+// Used for writing init script
+$config->exePath = dirname(__FILE__); 
+
+$moulin = new Moulin($config);
+       
+exit();
+
+?>
