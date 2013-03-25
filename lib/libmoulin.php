@@ -2,8 +2,13 @@
 
 class Moulin {
         private $_loopCounter = 0;
+        private $dbh = FALSE;
+        private $notifier = FALSE;
+        private $gear = FALSE;
+
         function __construct($config) {
-            require_once("System/Daemon.php");  
+            require_once("System/Daemon.php");
+            require_once("Notify.php");  
             $config->runmode = $this->getRunmode();
             $this->setDaemonOptions($config);
             // If runmode --write-initd, this program will write a startup script
@@ -17,18 +22,26 @@ class Moulin {
             }else{ 
                 if($config->database->enable){
                     $this->dbh = $this->initDb($config->database);
-                    $this->info("Connected to: mysql://" . $config->database->user . "@" . $config->database->host . "/" . $config->database->database);
+                    System_Daemon::info("Connected to: mysql://" . $config->database->user . "@" . $config->database->host . "/" . $config->database->database);
                 }
+                # Connect to gearman
+                $this->gear = new GearmanClient();
+                $this->gear->addServer($config->gearmanServer->host, $config->gearmanServer->port);
+                #get a notifier
+                $this->notifier = new Notify($config->notifications);
+                
+                #start runtime
                 $this->main($config);
             }            
         }    
         // Main must be a public function.
         public function main($config){
             // This program can also be run in the forground with runmode --interactive
-             echo('calling main()'); 
              if (!$config->runmode['interactive']){
                  // Spawn Daemon
                  error_reporting(4096);
+                 $hostname = trim(`hostname`);
+                 $this->notifier->email($config->adminEmail, "[Moulin] Daemon restarted on $hostname at " . date('l, F d, H:i:s'), "<p>The Moulin controller daemon started on " . $hostname . ". Restart occurred on " . date('l, F d, H:i:s') . ".</p>");
              	 System_Daemon::start();
              }else{
                  error_reporting(512);
@@ -41,13 +54,14 @@ class Moulin {
              }
         }
         private function _loop($config){
-            System_Daemon::notice("Moulin->loop(); " .  $this->getCount());
+            System_Daemon::notice("Looking for work: " .  $this->getCount());
+            $result = $this->dbh->queryAll("select * from auth where username in ('grant@spokenlayer.com')");
+            foreach($result as $record){
+                System_Daemon::notice("User: " .  $record->username);
+            }
         }
         private function upCount(){
             $this->_loopCounter++;
-        }
-        public function getCount(){
-            return $this->_loopCounter;
         }
         private function getRunmode(){
             global $argv;
@@ -104,12 +118,10 @@ class Moulin {
             $dbh->setFetchMode(MDB2_FETCHMODE_OBJECT);
             return $dbh;
         }
-        private function info($message){
-            System_Daemon::info($message);
+        public function getCount(){
+            return $this->_loopCounter;
         }
-        private function notice($message){
-            System_Daemon::notice($message);
-        }     
+
 }
 
 ?>

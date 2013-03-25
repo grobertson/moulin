@@ -6,7 +6,7 @@
 $config = new StdClass(); 
 $config->etc = dirname(__FILE__); 
 $config->debug = FALSE;
-$config->loopDelay = 2;
+$config->loopDelay = 5;
 
 // Override DB in server config. 
 $config->database = new StdClass();

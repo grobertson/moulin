@@ -1,6 +1,7 @@
 <?
 // Debug
 $config->debug = TRUE;
+$config->adminEmail = "grant@spokenlayer.com";
 
 //Database
 $config->database->enable=TRUE;
@@ -15,8 +16,11 @@ $config->gearmanServer->port=4730;
 
 // Notifications
 $config->notifications = new StdClass();
-$config->notifications->postmarkKey="dee677be-6ef6-4efd-8de8-e836ac990387";
-$config->notifications->postmarkFrom="voices@spokenlayer.com";
+$config->notifications->postmarkServer = "http://api.postmarkapp.com/email/";
+$config->notifications->postmarkKey = "dee677be-6ef6-4efd-8de8-e836ac990387";
+$config->notifications->postmarkFrom = "voices@spokenlayer.com";
+
+//TODO: Namespace these more appropriately or use some sort of template.
 $config->notifications->newStoryEmailSubject="[SpokenLayer Voices] A new story is available to be recorded.";
 $config->notifications->newStoryEmailBody='<html><body><strong>The Voices of SpokenLayer,</strong><p>A new story has just been added to the queue.</p> <p>To claim the story for recording, please visit:<p><p>http://voices.spokenlayer.com/</p></body></html>';
 
