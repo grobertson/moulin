@@ -3,6 +3,7 @@
 $config->debug = TRUE;
 $config->adminEmail = "grant@spokenlayer.com";
 
+ 
 //Database
 $config->database->enable=TRUE;
 $config->database->user="root";
@@ -15,6 +16,7 @@ $config->gearmanServer->host="10.211.55.10";
 $config->gearmanServer->port=4730;
 
 // Notifications
+$config->notifications->postmarkEnabled = FALSE;
 $config->notifications = new StdClass();
 $config->notifications->postmarkServer = "http://api.postmarkapp.com/email/";
 $config->notifications->postmarkKey = "dee677be-6ef6-4efd-8de8-e836ac990387";

@@ -25,6 +25,11 @@ class Notify{
     	$data->Subject=$subject;
     	$data->HtmlBody=$message;
         $data->From=$this->postmarkFrom;
+        if(!$this->config->postmarkEnabled){
+            System_Daemon::notice('Postmark Disbaled in Notify::_sendPostmark -- Message not sent.');
+            System_Daemon::notice('Unsent message: To: ' . $email . ' Subject: ' . $subject);
+            return true;
+        }
       try{
     	$ch = curl_init(); 
         curl_setopt($ch, CURLOPT_URL, $this->postmarkServer); 

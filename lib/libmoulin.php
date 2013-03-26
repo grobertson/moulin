@@ -5,9 +5,11 @@ class Moulin {
         private $dbh = FALSE;
         private $notifier = FALSE;
         private $gear = FALSE;
+        private $jobs = FALSE;
 
         function __construct($config) {
             require_once("System/Daemon.php");
+            require_once("Jobs.php");
             require_once("Notify.php");  
             $config->runmode = $this->getRunmode();
             $this->setDaemonOptions($config);
@@ -18,7 +20,8 @@ class Moulin {
                     System_Daemon::notice('unable to write init.d script');
                 } else {
                     System_Daemon::info('Sucessfully created startup script: %s', $initd_location);
-                }   
+                }
+                exit();   
             }else{ 
                 if($config->database->enable){
                     $this->dbh = $this->initDb($config->database);
@@ -29,6 +32,10 @@ class Moulin {
                 $this->gear->addServer($config->gearmanServer->host, $config->gearmanServer->port);
                 #get a notifier
                 $this->notifier = new Notify($config->notifications);
+                
+                // Load up the available job types for this client. 
+                $jobs = new Jobs($config);
+                
                 
                 #start runtime
                 $this->main($config);
