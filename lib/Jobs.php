@@ -13,10 +13,10 @@ class Jobs{
         $foundClasses = FALSE;
         foreach($classFiles as $className){
             if($className !== '.' && $className !== '..'){
-                //found a directory, look for workers.
-                if(is_file($jobsPath . "/" . $className . '/worker/' . $className . '.php')){
-                    $classFile = $jobsPath . "/" . $className . '/worker/' . $className . '.php';
-                    System_Daemon::info('Found a worker class at ' . $jobsPath . "/" . $className . '/worker/' . $className . '.php');
+                //found a directory, look for jobs to load.
+                if(is_file($jobsPath . "/" . $className . '/client/' . $className . '.php')){
+                    $classFile = $jobsPath . "/" . $className . '/client/' . $className . '.php';
+                    System_Daemon::info('Found a worker class at ' . $jobsPath . "/" . $className . '/client/' . $className . '.php');
                     include($classFile);
                     $foundClasses[] = new $className($config);
                 }
