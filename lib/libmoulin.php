@@ -1,13 +1,16 @@
 <?
 
+
+
 class Moulin {
         private $_loopCounter = 0;
-        private $dbh = FALSE;
-        private $notifier = FALSE;
-        private $gear = FALSE;
+        public $dbh = FALSE;
+        public $notifier = FALSE;
+        public $gear = FALSE;
         private $jobs = FALSE;
 
         function __construct($config) {
+            require_once('JobClient.php');  //Abstract class upon which Job clients are created.
             require_once("System/Daemon.php");
             require_once("Jobs.php");
             require_once("Notify.php");  
@@ -23,36 +26,36 @@ class Moulin {
                 }
                 exit();   
             }else{ 
-                if($config->database->enable){
-                    $this->dbh = $this->initDb($config->database);
-                    System_Daemon::info("Connected to: mysql://" . $config->database->user . "@" . $config->database->host . "/" . $config->database->database);
-                }
-                # Connect to gearman
-                $this->gear = new GearmanClient();
-                $this->gear->addServer($config->gearmanServer->host, $config->gearmanServer->port);
-                #get a notifier
-                $this->notifier = new Notify($config->notifications);
-                
-                // Load up the available job types for this client. 
-                $jobs = new Jobs($config);
-                
-                
                 #start runtime
                 $this->main($config);
             }            
-        }    
+        }
+            
         // Main must be a public function.
         public function main($config){
             // This program can also be run in the forground with runmode --interactive
              if (!$config->runmode['interactive']){
                  // Spawn Daemon
-                 error_reporting(4096);
+                 error_reporting(0);
                  $hostname = trim(`hostname`);
-                 $this->notifier->email($config->adminEmail, "[Moulin] Daemon restarted on $hostname at " . date('l, F d, H:i:s'), "<p>The Moulin controller daemon started on " . $hostname . ". Restart occurred on " . date('l, F d, H:i:s') . ".</p>");
+                 //$this->notifier->email($config->adminEmail, "[Moulin] Daemon restarted on $hostname at " . date('l, F d, H:i:s'), "<p>The Moulin controller daemon started on " . $hostname . ". Restart occurred on " . date('l, F d, H:i:s') . ".</p>");
              	 System_Daemon::start();
              }else{
-                 error_reporting(512);
+                 error_reporting(4096);
              }
+             
+             if($config->database->enable){
+                 $this->dbh = $this->initDb($config->database);
+                 System_Daemon::info("Connected to: mysql://" . $config->database->user . "@" . $config->database->host . "/" . $config->database->database);
+             }
+             # Connect to gearman
+             $this->gear = new GearmanClient();
+             $this->gear->addServer($config->gearmanServer->host, $config->gearmanServer->port);
+             #get a notifier
+             $this->notifier = new Notify($config->notifications);
+
+             // Load up the available job types for this client. 
+             $this->jobs = new Jobs($config, $this->dbh, $this->notifier, $this->gear);
 
              while(!System_Daemon::isDying()){
                  $this->upCount();          // increment the private _loopCounter
@@ -62,9 +65,8 @@ class Moulin {
         }
         private function _loop($config){
             System_Daemon::notice("Looking for work: " .  $this->getCount());
-            $result = $this->dbh->queryAll("select * from auth where username in ('grant@spokenlayer.com')");
-            foreach($result as $record){
-                System_Daemon::notice("User: " .  $record->username);
+            foreach($this->jobs->getJobs() as $job){
+                $output = $job->run();
             }
         }
         private function upCount(){

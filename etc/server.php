@@ -9,15 +9,15 @@ $config->database->enable=TRUE;
 $config->database->user="root";
 $config->database->password="gw33d0";
 $config->database->host="localhost";
-$config->database->database="sl_voices";
+$config->database->database="moulin";
 
 $config->gearmanServer = new StdClass();
 $config->gearmanServer->host="10.211.55.10";
 $config->gearmanServer->port=4730;
 
 // Notifications
-$config->notifications->postmarkEnabled = FALSE;
 $config->notifications = new StdClass();
+$config->notifications->postmarkEnabled = FALSE;
 $config->notifications->postmarkServer = "http://api.postmarkapp.com/email/";
 $config->notifications->postmarkKey = "dee677be-6ef6-4efd-8de8-e836ac990387";
 $config->notifications->postmarkFrom = "voices@spokenlayer.com";

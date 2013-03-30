@@ -4,13 +4,17 @@ class Notify{
     private $postmarkServer = "";
     private $postmarkKey = "";
     private $postmarkFrom = "";
+    private $postmarkEnabled = FALSE;
+    
     function __construct($config){
+        $this->postmarkEnabled = $config->postmarkEnabled;
         $this->postmarkServer = $config->postmarkServer;
         $this->postmarkKey = $config->postmarkKey;
         $this->postmarkFrom = $config->postmarkFrom;
     }
+    
     public function email($email, $subject, $message){
-        //Extend this for different message methods (email, twitter, etc)
+        //Extend this for different message methods (postmark, sendgrid, sendmail, etc)
         if($this->_sendPostmark($email, $subject, $message)){
             return true;
         }else{
@@ -18,6 +22,7 @@ class Notify{
             return false;
         }
     }
+    
     //send postmark
     private function _sendPostmark($email, $subject, $message){
     	$data = new stdClass;
@@ -25,7 +30,7 @@ class Notify{
     	$data->Subject=$subject;
     	$data->HtmlBody=$message;
         $data->From=$this->postmarkFrom;
-        if(!$this->config->postmarkEnabled){
+        if(!$this->postmarkEnabled){
             System_Daemon::notice('Postmark Disbaled in Notify::_sendPostmark -- Message not sent.');
             System_Daemon::notice('Unsent message: To: ' . $email . ' Subject: ' . $subject);
             return true;

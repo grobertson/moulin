@@ -1,5 +1,6 @@
 #!/usr/bin/php
 <?
+//The bootstrap
 if(chdir(dirname(realpath( __FILE__ )))){
     include('../etc/config.php');
 }else{
@@ -13,6 +14,7 @@ if(include('../lib/libmoulin.php')){
 // Used for writing init script
 $config->exePath = dirname(__FILE__); 
 
+//Start Moulin.
 $moulin = new Moulin($config);
        
 exit();
