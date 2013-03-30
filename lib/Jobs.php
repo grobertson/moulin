@@ -9,7 +9,7 @@ class Jobs{
         $jobsPath = dirname(__FILE__);
         $jobsEnabledPath = preg_replace('/lib$/', 'jobs-enabled', $jobsPath);
         $jobsAvailablePath = preg_replace('/lib$/', 'jobs-available', $jobsPath);
-        System_Daemon::info('Looking for Moulin jobs in ' . $jobsEnabledPath);
+        echo('Looking for Moulin jobs in ' . $jobsEnabledPath);
         $classFiles = scandir ($jobsEnabledPath);
         $foundClasses = FALSE;
         foreach($classFiles as $className){
@@ -17,7 +17,7 @@ class Jobs{
                 //found a directory, look for jobs to load.
                 if(is_file($jobsAvailablePath . "/" . $className . '/client/' . $className . '.php')){
                     $classFile = $jobsAvailablePath . "/" . $className . '/client/' . $className . '.php';
-                    System_Daemon::info('Found a worker class at ' . $jobsAvailablePath . "/" . $className . '/client/' . $className . '.php');
+                    echo('Found a worker class at ' . $jobsAvailablePath . "/" . $className . '/client/' . $className . '.php');
                     include($classFile);
                     $foundClasses[] = new $className($config, $dbh, $notifier, $gear);
                 }

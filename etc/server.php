@@ -17,7 +17,7 @@ $config->gearmanServer->port=4730;
 
 // Notifications
 $config->notifications = new StdClass();
-$config->notifications->postmarkEnabled = FALSE;
+$config->notifications->postmarkEnabled = TRUE;
 $config->notifications->postmarkServer = "http://api.postmarkapp.com/email/";
 $config->notifications->postmarkKey = "dee677be-6ef6-4efd-8de8-e836ac990387";
 $config->notifications->postmarkFrom = "voices@spokenlayer.com";

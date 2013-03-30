@@ -12,7 +12,7 @@ abstract class JobClient
     
     function __construct($config, $dbh, $notifier, $gear){
         $this->setJobClientName();
-        System_Daemon::info("Registered job client " . $this->getJobClientName());
+        echo("Registered job client " . $this->getJobClientName());
         $this->jobConfigLoaded = $this->_readConfig();
         if($this->jobConfig['database']['database']){
             $database = (object) $this->jobConfig['database'];
@@ -28,7 +28,7 @@ abstract class JobClient
         // the name of our calling class. If it's anything other than Moulin, we're overridden
         // and being called correctly. 
         if($this->get_calling_class() == 'Moulin'){
-            System_Daemon::info("Override the " . $this->getJobClientName() . "->run() method to execute your client job.");
+            echo("Override the " . $this->getJobClientName() . "->run() method to execute your client job.");
         }
         
         //write a heartbeat at the end of every execution. 
@@ -41,20 +41,20 @@ abstract class JobClient
         $moulinRootPath = preg_replace("/lib$/", '', $moulinLibPath);
         $jobClientRoot = $moulinRootPath . 'jobs-available/' . $this->jobClientName . "/";
         $jobClientEtc = $jobClientRoot . "etc/";
-        System_Daemon::info('Probing config files in : ' . $jobClientEtc);
+        echo('Probing config files in : ' . $jobClientEtc);
         $etcFiles = scandir ($jobClientEtc);
         foreach($etcFiles as $etcFile){
             if($etcFile !== '.' && $etcFile !== '..'){
                 //look for config files to load.
                 //only parse files ending with .ini
                 if(preg_match('/\.ini/', $etcFile)){
-                    System_Daemon::info('Loading configuration file from ' . $jobClientEtc . $etcFile);
+                    echo('Loading configuration file from ' . $jobClientEtc . $etcFile);
                     $this->jobConfig = parse_ini_file($jobClientEtc . $etcFile, TRUE);
                 }
             }
         }
         if(!$this->jobConfig){
-            System_Daemon::notice('No configuration loaded for ' . $this->jobClientName);
+            echo('No configuration loaded for ' . $this->jobClientName);
             return FALSE;
         }else{
             return TRUE;

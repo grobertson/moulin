@@ -18,7 +18,7 @@ class Notify{
         if($this->_sendPostmark($email, $subject, $message)){
             return true;
         }else{
-            System_Daemon::notice('Could not send message to ' . $email);
+            echo('Could not send message to ' . $email);
             return false;
         }
     }
@@ -31,8 +31,8 @@ class Notify{
     	$data->HtmlBody=$message;
         $data->From=$this->postmarkFrom;
         if(!$this->postmarkEnabled){
-            System_Daemon::notice('Postmark Disbaled in Notify::_sendPostmark -- Message not sent.');
-            System_Daemon::notice('Unsent message: To: ' . $email . ' Subject: ' . $subject);
+            echo('Postmark Disbaled in Notify::_sendPostmark -- Message not sent.');
+            echo('Unsent message: To: ' . $email . ' Subject: ' . $subject);
             return true;
         }
       try{
@@ -52,14 +52,14 @@ class Notify{
         if($httpCode == 200){
             $response = json_decode($doc);
             if($response->ErrorCode == 0){
-                System_Daemon::notice('Sent postmark to ' . $email . " with MessageID " . $response->MessageID);
+                echo('Sent postmark to ' . $email . " with MessageID " . $response->MessageID);
                 return true;    
             }else{
-                System_Daemon::crit('Postmark send fail: ' . $doc);
+                echo('Postmark send fail: ' . $doc);
                 return false;
             }
         }else{
-            System_Daemon::crit('Postmark API returned http error ' . $httpCode);
+            echo('Postmark API returned http error ' . $httpCode);
             return false;
         }
 
