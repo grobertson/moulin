@@ -9,18 +9,21 @@ abstract class JobClient
     public $jobDbh = FALSE;
     public $notifier = FALSE;
     public $gear = FALSE;
+    public $log = FALSE;
     
-    function __construct($config, $dbh, $notifier, $gear){
+    function __construct($config, $log, $notifier, $gear, $dbh){
+        $this->log = $log; 
         $this->setJobClientName();
-        echo("Registered job client " . $this->getJobClientName());
+        $this->log->info("Registered job client " . $this->getJobClientName());
         $this->jobConfigLoaded = $this->_readConfig();
         if($this->jobConfig['database']['database']){
             $database = (object) $this->jobConfig['database'];
-            $this->jobDbh = $this->_initDb($database);
+            $this->jobDbh = Moulin::initDb($database);
         }
-        $this->_dbh = $dbh;
+        
         $this->notifier = $notifier;
         $this->gear = $gear;
+        $this->_dbh = $dbh;
     }
 
     public function run(){
@@ -28,7 +31,7 @@ abstract class JobClient
         // the name of our calling class. If it's anything other than Moulin, we're overridden
         // and being called correctly. 
         if($this->get_calling_class() == 'Moulin'){
-            echo("Override the " . $this->getJobClientName() . "->run() method to execute your client job.");
+            $this->log->warning("Override the " . $this->getJobClientName() . "->run() method to execute your client job.");
         }
         
         //write a heartbeat at the end of every execution. 
@@ -37,24 +40,25 @@ abstract class JobClient
     }
     
     private function _readConfig(){
+        $this->log->debug('_readConfig');
         $moulinLibPath = dirname(__FILE__);
         $moulinRootPath = preg_replace("/lib$/", '', $moulinLibPath);
         $jobClientRoot = $moulinRootPath . 'jobs-available/' . $this->jobClientName . "/";
         $jobClientEtc = $jobClientRoot . "etc/";
-        echo('Probing config files in : ' . $jobClientEtc);
+        $this->log->info('Probing config files in : ' . $jobClientEtc);
         $etcFiles = scandir ($jobClientEtc);
         foreach($etcFiles as $etcFile){
             if($etcFile !== '.' && $etcFile !== '..'){
                 //look for config files to load.
                 //only parse files ending with .ini
                 if(preg_match('/\.ini/', $etcFile)){
-                    echo('Loading configuration file from ' . $jobClientEtc . $etcFile);
+                    $this->log->info('Loading configuration file from ' . $jobClientEtc . $etcFile);
                     $this->jobConfig = parse_ini_file($jobClientEtc . $etcFile, TRUE);
                 }
             }
         }
         if(!$this->jobConfig){
-            echo('No configuration loaded for ' . $this->jobClientName);
+            $this->log->info('No configuration loaded for ' . $this->jobClientName);
             return FALSE;
         }else{
             return TRUE;

@@ -17,10 +17,17 @@ $config->gearmanServer->port=4730;
 
 // Notifications
 $config->notifications = new StdClass();
-$config->notifications->postmarkEnabled = TRUE;
+$config->notifications->postmarkEnabled = FALSE;
 $config->notifications->postmarkServer = "http://api.postmarkapp.com/email/";
-$config->notifications->postmarkKey = "dee677be-6ef6-4efd-8de8-e836ac990387";
+$config->notifications->postmarkKey = "f9946e74-0b4a-45bc-afe8-00a65c105417";
+//$config->notifications->postmarkKey = "dee677be-6ef6-4efd-8de8-e836ac990387";
 $config->notifications->postmarkFrom = "voices@spokenlayer.com";
+
+$config->notifications->twilioEnabled = TRUE;
+$config->notifications->twilioAccountSid = "AC74853d0923256d0def13d8cadb7004ea";
+$config->notifications->twilioAuthToken = "3ba0523623ab9f0f9ee51342b766647d";
+$config->notifications->twilioNumber = "+17732506369";
+$config->notifications->twilioServer = "https://api.twilio.com/2010-04-01/Accounts/";
 
 //TODO: Namespace these more appropriately or use some sort of template.
 $config->notifications->newStoryEmailSubject="[SpokenLayer Voices] A new story is available to be recorded.";

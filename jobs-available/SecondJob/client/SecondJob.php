@@ -1,9 +1,9 @@
 <?
 class SecondJob extends JobClient {
     public function run(){
-        $this->notifier->email("me@grantrobertson.com", "I'm a SimpleExample running on Moulin.", "I sent this message when I was instantiated.");
+        $this->notifier->sms("4044577299", "I'm a SimpleExample running on Moulin.");
         $uptime = trim(`uptime`);
-        echo("SecondJob: $uptime");
+        $this->log->notice("$uptime", "SecondJob", "run");
         parent::run();
         return true;
     }

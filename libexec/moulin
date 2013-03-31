@@ -3,6 +3,7 @@
 error_reporting(E_ALL);
 ini_set('display_errors', '1');
 
+
 //The bootstrap
 if(chdir(dirname(realpath( __FILE__ )))){
     include('../etc/config.php');
@@ -10,7 +11,7 @@ if(chdir(dirname(realpath( __FILE__ )))){
     echo("Unable to load config.\n");
 };
 
-if(include('../lib/libmoulin.php')){
+if(require_once('../lib/libmoulin.php')){
 }else{
     die("Unable to load Moulin library.\n");
 };
