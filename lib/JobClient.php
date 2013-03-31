@@ -52,7 +52,7 @@ abstract class JobClient
                 //look for config files to load.
                 //only parse files ending with .ini
                 if(preg_match('/\.ini/', $etcFile)){
-                    $this->log->info('Loading configuration file from ' . $jobClientEtc . $etcFile);
+                    $this->log->notice('Loading configuration file from ' . $jobClientEtc . $etcFile);
                     $this->jobConfig = parse_ini_file($jobClientEtc . $etcFile, TRUE);
                 }
             }
@@ -78,6 +78,7 @@ abstract class JobClient
         $this->jobClientName = get_called_class();
     }
     
+
     function get_calling_class() {
         // https://gist.github.com/kylefarris/5188645
         // https://gist.github.com/hamstar/1122679
@@ -92,7 +93,6 @@ abstract class JobClient
                      return $trace[$i]['class'];
         }
     }
-     
 }  
 
 ?>

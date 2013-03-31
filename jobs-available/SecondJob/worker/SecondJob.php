@@ -1,0 +1,5 @@
+<?
+class SecondJob extends JobWorker {
+    
+}
+?>

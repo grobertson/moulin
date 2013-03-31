@@ -3,6 +3,7 @@
 error_reporting(E_ALL);
 ini_set('display_errors', '1');
 
+
 //Sig handler sets this true to die gracefully from the loop
 $isDying = false;
 declare(ticks = 1);
@@ -13,7 +14,7 @@ if(chdir(dirname(realpath( __FILE__ )))){
     $moulinLibExecPath = dirname(__FILE__);
     $moulinRootPath = preg_replace("/libexec$/", '', $moulinLibExecPath);
     $moulinEtcPath = $moulinRootPath . "etc/";
-    $config = parse_ini_file($moulinEtcPath . 'moulin.ini', TRUE);
+    $config = parse_ini_file($moulinEtcPath . 'moulin-worker.ini', TRUE);
     $config['environment']['libexec_path']  = $moulinLibExecPath;
     $config['environment']['approot_path']  = $moulinRootPath;
     $config['environment']['etc_path']      = $moulinEtcPath;
@@ -27,7 +28,7 @@ if(require_once('../lib/libmoulin.php')){
 };
 
 //Start Moulin.
-$moulin = new Moulin($config);
+$moulin = new MoulinWorker($config);
        
 exit();
 
