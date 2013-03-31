@@ -11,19 +11,23 @@ class Notify{
     private $twilioAuthToken = "";
     private $twilioNumber = "";
     private $twilioServer = "";
-    
-    function __construct($config, $log){
+    private $_dbh = FALSE;
+    function __construct($config, $log, $dbh){
         require_once('Curl.php');
         $this->log = $log;
-        $this->postmarkEnabled = $config->postmarkEnabled;
-        $this->postmarkServer = $config->postmarkServer;
-        $this->postmarkKey = $config->postmarkKey;
-        $this->postmarkFrom = $config->postmarkFrom;
-        $this->twilioEnabled = $config->twilioEnabled;
-        $this->twilioAccountSid = $config->twilioAccountSid;
-        $this->twilioAuthToken = $config->twilioAuthToken;
-        $this->twilioNumber = $config->twilioNumber;
-        $this->twilioServer = $config->twilioServer;
+        $this->_dbh = $dbh;
+        $this->postmarkEnabled = $config['notifications.postmark']['enabled'];
+        $this->postmarkServer = $config['notifications.postmark']['api_server'];
+        $this->postmarkKey = $config['notifications.postmark']['api_key'];
+        $this->postmarkFrom = $config['notifications.postmark']['from'];
+        $this->twilioEnabled = $config['notifications.twilio']['enabled'];
+        $this->twilioAccountSid = $config['notifications.twilio']['account_sid'];
+        $this->twilioAuthToken = $config['notifications.twilio']['auth_token'];
+        $this->twilioNumber = $config['notifications.twilio']['number'];
+        $this->twilioServer = $config['notifications.twilio']['server'];
+        if($this->twilioEnabled){
+            $this->syncTwilioSchema();
+        }
     }
     
     public function email($email, $subject, $body){
@@ -48,7 +52,9 @@ class Notify{
         $message->Body=$body;
         $this->log->info('Sending SMS to ' . $message->To . ': ' . $message->Body);
         if($this->_sendTwilio($number, $message)){
-            $this->log();
+            $this->log->info('SMS sent to: ' . $number);
+        }else{
+            $this->log->error('SMS failed to: ' . $number);
         }   
     }
     
@@ -66,7 +72,7 @@ class Notify{
             Curl::setHeaders($ch, array("X-Postmark-Server-Token: " . $this->postmarkKey,              
             							"Content-Type: application/json",
             							"Accept: application/json"));                      
-            $doc = Curl::post($ch, $message);
+            $doc = Curl::post($ch, json_encode($message));
             $httpCode = Curl::getCode($ch);
             Curl::close($ch);
             if($httpCode == 200){
@@ -92,32 +98,73 @@ class Notify{
     
     //send sms via Twilio
     private function _sendTwilio($number, $message){
+        if(!$this->twilioEnabled){
+            $this->log->warning('SMS not sent because Twilio is disabled in moulin.ini');
+            $this->log->debug('SMS to: ' . $number);
+            $this->log->debug('SMS: ' . $message->Body);
+            return true;
+        }
+        
         $url = $this->twilioServer . $this->twilioAccountSid . "/SMS/Messages.json";
         $message->From = $this->twilioNumber;
         $ch = Curl::init();
         Curl::setUrl($ch, $url);                                                          
         Curl::setAuth($ch, $this->twilioAccountSid, $this->twilioAuthToken);
-        //$response = Curl::post($ch, $message);
-        //$twilio = json_decode($response);
-        /*
-        stdClass Object
-        (
-            [sid] => SMc46ec6904fac651ed8ec5db9b1bf22ae
-            [date_created] => Sat, 30 Mar 2013 22:47:25 +0000
-            [date_updated] => Sat, 30 Mar 2013 22:47:25 +0000
-            [date_sent] => 
-            [account_sid] => AC74853d0923256d0def13d8cadb7004ea
-            [to] => +14044577299
-            [from] => +17732506369
-            [body] => I'm a SimpleExample running on Moulin.
-            [status] => queued
-            [direction] => outbound-api
-            [api_version] => 2010-04-01
-            [price] => 
-            [uri] => /2010-04-01/Accounts/AC74853d0923256d0def13d8cadb7004ea/SMS/Messages/SMc46ec6904fac651ed8ec5db9b1bf22ae.json
-        )
-        */
-
+        $response = Curl::post($ch, $message);
+        $twilio = (array) json_decode($response);
+        $twilio['from_number'] = $twilio['from'];
+        $twilio['to_number'] = $twilio['to'];
+        unset($twilio['to']);
+        unset($twilio['from']);
+        $this->log->debug($response);
+        if($twilio['status'] === "queued"){
+            $this->log->info('SMS Sent successfully to: ' . $twilio['to_number']);
+            $sth = $this->_dbh->extended->autoExecute('notify_twilio', $twilio, MDB2_AUTOQUERY_INSERT, null);
+            $this->log->debug('Insert to notify_twilio autoExecuted.');
+            return true; 
+        }else{
+            return false;
+        }
     }
+    
+    function createTwilioSchema(){
+        $table_options = array(
+            'comment' => 'Twilio messages',
+            'charset' => 'utf8',
+            'collate' => 'utf8_unicode_ci',
+            'type'    => 'innodb',
+        );
+        $definition = array (
+            'sid' => array ('type' => 'text', 'length' => 128),
+            'date_created' => array ('type' => 'text', 'length' => 128),
+            'date_updated' => array ('type' => 'text', 'length' => 128),
+            'date_sent' => array ('type' => 'text', 'length' => 128),
+            'account_sid' => array ('type' => 'text', 'length' => 128),
+            'to_number' => array ('type' => 'text', 'length' => 128),
+            'from_number' => array ('type' => 'text', 'length' => 128),
+            'body' => array ('type' => 'text', 'length' => 255),
+            'status' => array ('type' => 'text', 'length' => 128),
+            'direction' => array ('type' => 'text', 'length' => 128),
+            'api_version' => array ('type' => 'text', 'length' => 128),
+            'price' => array ('type' => 'text', 'length' => 128),
+            'uri' => array ('type' => 'text', 'length' => 128)
+        );
+
+        $result = $this->_dbh->createTable('notify_twilio', $definition, $table_options);
+        return true;
+    }
+    
+    function syncTwilioSchema(){
+        $tables = $this->_dbh->manager->listTables();
+        if(array_search('notify_twilio', $tables) === FALSE){
+            $this->log->info('Creating table notify_twilio');
+            $this->createTwilioSchema();
+        }else{
+            //TODO: Schema Check
+            return true;
+        }
+    
+    }
+
 }
 ?>

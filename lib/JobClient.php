@@ -92,16 +92,7 @@ abstract class JobClient
                      return $trace[$i]['class'];
         }
     }
-    
-    private function _initDb($database){
-        $dsn = "mysql://" . $database->user . ":" . $database->password  . "@" . $database->host . "/" . $database->database;
-        $dbh = MDB2::factory($dsn);
-        if(PEAR::isError($dbh)) {
-        	die("Error : " . $dbh->getMessage());
-        }
-        $dbh->setFetchMode(MDB2_FETCHMODE_OBJECT);
-        return $dbh;
-    }   
+     
 }  
 
 ?>

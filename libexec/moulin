@@ -6,7 +6,13 @@ ini_set('display_errors', '1');
 
 //The bootstrap
 if(chdir(dirname(realpath( __FILE__ )))){
-    include('../etc/config.php');
+    $moulinLibExecPath = dirname(__FILE__);
+    $moulinRootPath = preg_replace("/libexec$/", '', $moulinLibExecPath);
+    $moulinEtcPath = $moulinRootPath . "etc/";
+    $config = parse_ini_file($moulinEtcPath . 'moulin.ini', TRUE);
+    $config['environment']['libexec_path']  = $moulinLibExecPath;
+    $config['environment']['approot_path']  = $moulinRootPath;
+    $config['environment']['etc_path']      = $moulinEtcPath;
 }else{
     echo("Unable to load config.\n");
 };
@@ -15,12 +21,11 @@ if(require_once('../lib/libmoulin.php')){
 }else{
     die("Unable to load Moulin library.\n");
 };
-// Used for writing init script
-$config->exePath = dirname(__FILE__); 
 
 //Start Moulin.
 $moulin = new Moulin($config);
        
 exit();
+
 
 ?>

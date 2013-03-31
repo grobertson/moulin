@@ -16,12 +16,14 @@ class Moulin {
             $this->hostname = `hostname`;
             require_once('JobClient.php');  //Abstract class upon which Job clients are created.
             require_once('Jobs.php');
-            require_once('Notify.php');  
+            require_once('Notify.php');
+              
             
-            $this->log = Log::singleton('composite', '', 'moulin [' . $this->pid . ']', array(), 7);
-            $console = Log::singleton('console', '', 'moulin [' . $this->pid . ']', array(), 6);
+            $this->log = Log::factory('composite', '', 'moulin [' . $this->pid . ']', array(), $config['logging']['log_level']);
+            $console = Log::factory('console', '', 'moulin [' . $this->pid . ']', array(), $config['logging']['log_level']);
+            $filelog = Log::factory('file', $config['logging']['log_file'], 'moulin [' . $this->pid . ']', array(), $config['logging']['log_level']);
             $this->log->addChild($console);
-            
+            $this->log->addChild($filelog);
             /*
             $this->log->debug('7');
             $this->log->info('6');
@@ -43,19 +45,19 @@ class Moulin {
              
              $hostname = trim(`hostname`);
              
-             if($config->database->enable){
-                 $this->dbh = $this->initDb($config->database);
-                 $this->log->info("Connected to: mysql://" . $config->database->user . "@" . $config->database->host . "/" . $config->database->database);
+             if($config['database']){
+                 $db = (object) $config['database'];
+                 $this->dbh = $this->initDb($db);
              }
              
              # Connect to gearman
              $this->log->debug('Start Gearman');
              $this->gear = new GearmanClient();
-             $this->gear->addServer($config->gearmanServer->host, $config->gearmanServer->port);
+             $this->gear->addServer($config['gearman']['host'], $config['gearman']['port']);
              
              #get a notifier
              $this->log->debug('Start Notifier');
-             $this->notifier = new Notify($config->notifications, $this->log);
+             $this->notifier = new Notify($config, $this->log, $this->dbh);
              
              $this->log->debug('Load jobs');
              // Load up the available job types for this client. 
@@ -67,7 +69,7 @@ class Moulin {
                  $running = false;          // set true to only run one loop
                  $this->upCount();          // increment the private _loopCounter
                  $this->_loop($config);     // call the loop
-                 sleep($config->loopDelay); // sleep for the configured loop delay time
+                 sleep($config['moulin']['loop_interval']); // sleep for the configured loop delay time
              }
         }
         
@@ -94,8 +96,12 @@ class Moulin {
             
             if(PEAR::isError($dbh)) {
             	die("Error : " . $dbh->getMessage());
+            }else{
+                $this->log->info("Connected to: mysql://" . $database->user . "@" . $database->host . "/" . $database->database);
             }
-            
+            $dbh->loadModule('Extended', null, true);
+            $dbh->loadModule('Reverse', null, true);
+            $dbh->loadModule('Manager');
             $dbh->setFetchMode(MDB2_FETCHMODE_OBJECT);
             return $dbh;
         }
@@ -107,6 +113,7 @@ class Moulin {
         public function log($message, $module="", $function=""){;
             echo('Moulin::log Deprecated. use shared instance');
         }
+
 }
 
 ?>
