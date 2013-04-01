@@ -14,13 +14,12 @@ abstract class JobWorker
         $this->setJobWorkerName();
         $this->log->info("Registered worker " . $this->getJobWorkerName());
         $this->workerConfigLoaded = $this->_readConfig();
+
         if($this->workerConfig['database']['database']){
             $database = (object) $this->workerConfig['database'];
             $this->workerDbh = MoulinWorker::initDb($database);
         }
-        
         $this->gear = $gear;
-        $this->_dbh = $dbh;
     }
 
     public function run(){

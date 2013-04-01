@@ -10,10 +10,21 @@ abstract class JobClient
     public $notifier = FALSE;
     public $gear = FALSE;
     public $log = FALSE;
+    public $uuid = FALSE;
+    public $handles = FALSE;
+    public $completed = 0;
+    public $dispatched = 0;
+    public $max_dispatch_per_loop = 100;
     
     function __construct($config, $log, $notifier, $gear, $dbh){
+        require_once('Util.php');
+        $this->uuid = new uuid();
         $this->log = $log; 
         $this->setJobClientName();
+        $this->handles = array();
+        $this->completed = 0;
+        $this->dispatched = 0; 
+        $this->max_dispatch_per_loop = 100;
         $this->log->info("Registered job client " . $this->getJobClientName());
         $this->jobConfigLoaded = $this->_readConfig();
         if($this->jobConfig['database']['database']){
@@ -78,6 +89,24 @@ abstract class JobClient
         $this->jobClientName = get_called_class();
     }
     
+    public function claimPendingJobs(){
+        $sql = "update gearman_jobs set job_status='". $this->getJobClientName() . "' where job_class='". $this->getJobClientName() . "' AND job_status='pending' limit " . $this->max_dispatch_per_loop . "";
+        $this->log->debug($sql);
+        $result = $this->jobDbh->query($sql);
+    }
+    
+    public function getClaimedJobs(){
+        $sql = "select * from gearman_jobs where job_status='". $this->getJobClientName() . "' AND  job_class='". $this->getJobClientName() . "' limit 0, " . $this->max_dispatch_per_loop . "";
+        $this->log->debug($sql);
+        $result = $this->jobDbh->queryAll($sql);
+        return $result;
+    }
+    
+    public function setJobDispatched($moulin_id, $job_handle, $uuid){
+        $sql = "update gearman_jobs set job_status='dispatched', job_handle='$job_handle', job_uuid='$uuid', job_dispatched=NOW() where moulin_id='$moulin_id' ";
+        $this->log->debug($sql);
+        $result = $this->jobDbh->query($sql);
+    }
 
     function get_calling_class() {
         // https://gist.github.com/kylefarris/5188645

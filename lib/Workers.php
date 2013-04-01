@@ -21,6 +21,7 @@ class Workers{
                     $log->info('Found a worker class at ' . $workersAvailablePath . "/" . $className . '/worker/' . $className . '.php');
                     include($classFile);
                     $foundClasses[] = new $className($config, $log, $gear);
+                    $log->info('Installed worker class ' . $className . '');
                 }
             }
         }
