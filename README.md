@@ -1,6 +1,7 @@
 le moulin (The Mill)
-* This complete but abandoned project of mine could serve as a starting point for anyone wishing to create a similar job server. 
 ======
+
+*(This complete but abandoned project may serve as a starting point for anyone wishing to create a similar job server)*
 
 Experimental Gearman based daemon to run asynchronous tasks and receive task output asynchronously. 
 
